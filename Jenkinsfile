@@ -1,48 +1,50 @@
 pipeline {
     agent any
-
+    
     stages {
-        stage("Clone the project") {
+        stage("Checkout SCM") {
             steps {
-                // Clone the Git repository
-                git branch: 'main', url: 'https://github.com/StelioPortugal/usermanagement.git'
+                checkout scm
             }
         }
-
+        
         stage("Compilation") {
             steps {
-                // Compile the project using Maven
                 script {
-                    sh '''
-                    #!/bin/bash
-                    ./mvnw clean install -DskipTests
-                    '''
+                    // Change to the project directory
+                    dir('/var/lib/jenkins/workspace/usermanagement') {
+                        // Compile the project using Maven
+                        sh '''
+                        #!/bin/bash
+                        ./mvnw clean install -DskipTests
+                        '''
+                    }
                 }
             }
         }
-
+        
         stage("Tests and Deployment") {
-            stages {
+            steps {
                 stage("Running unit tests") {
                     steps {
-                        // Run unit tests using Maven
                         script {
-                            sh '''
-                            #!/bin/bash
-                            ./mvnw test -Punit
-                            '''
+                            // Change to the project directory
+                            dir('/var/lib/jenkins/workspace/usermanagement') {
+                                // Run unit tests using Maven
+                                sh './mvnw test -Punit'
+                            }
                         }
                     }
                 }
-
+                
                 stage("Deployment") {
                     steps {
-                        // Deploy the Spring Boot application
                         script {
-                            sh '''
-                            #!/bin/bash
-                            nohup ./mvnw spring-boot:run -Dserver.port=8001 &
-                            '''
+                            // Change to the project directory
+                            dir('/var/lib/jenkins/workspace/usermanagement') {
+                                // Start the Spring Boot application
+                                sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
+                            }
                         }
                     }
                 }
