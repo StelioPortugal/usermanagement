@@ -15,3 +15,4 @@ node {
       sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
     }
   }
+}
