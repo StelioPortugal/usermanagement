@@ -1,43 +1,17 @@
-pipeline {
-    agent any
-    
-    environment {
-        // Set the JAVA_HOME environment variable to your Java installation path
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+node {
+  stage("Clone the project") {
+    git branch: 'main', url: 'https://github.com/StelioPortugal/usermanagement.git'
+  }
+
+  stage("Compilation") {
+    sh "./mvnw clean install -DskipTests"
+  }
+
+  stage("Tests and Deployment") {
+    stage("Runing unit tests") {
+      sh "./mvnw test -Punit"
     }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                // Checkout the source code from your Git repository
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/StelioPortugal/usermanagement.git']]])
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                script {
-                    // Ensure that the Maven wrapper script is executable
-                    sh 'chmod +x mvnw'
-                    
-                    // Build the project using Maven, skipping tests
-                    sh './mvnw clean install -DskipTests'
-                }
-            }
-        }
-        
-        stage('Deployment') {
-            steps {
-                // Add your deployment steps here
-                // For example, you can deploy the application to a web server, container, or cloud platform
-            }
-        }
+    stage("Deployment") {
+      sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
     }
-    
-    post {
-        failure {
-            // Actions to perform in case of pipeline failure
-            echo 'Build or deployment failed!'
-        }
-    }
-}
+  }
