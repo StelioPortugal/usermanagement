@@ -2,21 +2,40 @@ pipeline {
     agent any
     
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                // Checkout code from Git
-                checkout scm
+                // Checkout the code from your Git repository
+                script {
+                    def scmVars = checkout scm
+                }
             }
         }
         
         stage('Build and Deploy') {
             steps {
-                // Compile and package the Spring Boot application
-                sh './mvnw clean install -DskipTests'
-                
-                // Deploy your Spring Boot application
-                sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
+                // Build and deploy the application
+                script {
+                    // Set execute permissions on the mvnw script
+                    sh 'chmod +x mvnw'
+                    
+                    // Build the application and skip tests
+                    sh './mvnw clean install -DskipTests'
+                    
+                    // Start the application (adjust as needed)
+                    sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
+                }
             }
+        }
+    }
+    
+    post {
+        success {
+            // Add any post-build actions or notifications here
+            echo 'Build and deployment successful!'
+        }
+        failure {
+            // Add actions for when the build or deployment fails
+            echo 'Build or deployment failed!'
         }
     }
 }
